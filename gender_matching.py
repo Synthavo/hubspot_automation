@@ -2,8 +2,8 @@ import pandas as pd
 import os 
 import time
 
-INPUT_DIR = "input"
-OUTPUT_DIR = "output"
+INPUT_DIR = "input\gender"
+OUTPUT_DIR = "output\gender"
 
 FIRST_NAME_LABEL = "First Name"
 LAST_NAME_LABEL = "Last Name"
@@ -13,6 +13,10 @@ def get_start_line():
 
     try:
         inp_int = int(inp)
+
+        if inp_int == 0:
+            print("Please provide an int number > 0.")
+            return get_start_line()
         return inp_int
     except ValueError:
         print("Please only provide an int number.")
@@ -31,7 +35,7 @@ def get_gender_input(f_name, l_name):
         print("You did enter something else than exepcted.")
         return get_gender_input(f_name,l_name)
     
-def iteration(index, row,df):
+def iteration(index, row,df, file_index, start_line):
     if not(row.isnull()[FIRST_NAME_LABEL] and row.isnull()[LAST_NAME_LABEL]): #skip if both are empty
         if row.isnull()[FIRST_NAME_LABEL]:
             f_name = ""
@@ -46,23 +50,31 @@ def iteration(index, row,df):
         gender = get_gender_input(f_name, l_name)
         
         if gender == "back":
-            iteration(index -1, df.iloc[index-1], df)
-            iteration(index, row, df)
+            iteration(index -1, df.iloc[index-1], df, file_index, start_line)
+            iteration(index, row, df, file_index, start_line)
         else:
             if gender== "finish":
-                end_script(df)
+                end_script(df, file_index = file_index,start_line=start_line )
             #insert gender
             df.loc[index,"gender"] = gender
             
 
-def end_script(df: pd.DataFrame):
+def end_script(df: pd.DataFrame, file_index = None, start_line = None):
     df_filtered = df[df["gender"] != ""] #only save ones that you changed.
     
     filename = str(time.time()) + ".csv"
     filename = os.path.join(OUTPUT_DIR, filename)
 
     df_filtered.to_csv(filename, index  = False)
+
+    print(f"File saved to: {filename}")
+
+    if start_line == 1: start_line = 2
+
+    if file_index and start_line:
+        print(f"When continuing, enter Line: {file_index + start_line}")
     exit()
+
 
 
 if __name__ == "__main__":
@@ -78,14 +90,18 @@ if __name__ == "__main__":
         print("More than one CSV File in input folder. Please provide exactly one")
     else:
         csv_file = csv_files[0]
-        df  = pd.read_csv(os.path.join(INPUT_DIR, csv_file)) #TODO load from specific line
+        if start_line == 1:
+            df  = pd.read_csv(os.path.join(INPUT_DIR, csv_file),header=0)
+        else:
+            df  = pd.read_csv(os.path.join(INPUT_DIR, csv_file),header=0, skiprows=range(1,start_line-1)) 
+        
 
         #insert empty row
         df["gender"] = ""
 
-        for file_index, index, row in enumerate(df.iterrows()):
-            iteration(index, row, df)
-            #HIER WEITER, mach das geprintet wird welche line man weiter machen muss next time
+        for file_index, (index, row) in enumerate(df.iterrows()):
+            iteration(index, row, df, file_index,start_line)
+        
 
             
         print("All lines in file Done.")
