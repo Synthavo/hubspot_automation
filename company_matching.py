@@ -51,8 +51,8 @@ def get_company_string(string):
     lower, upper = list_to_display_String(splitted)
     return lower,upper, len(splitted)
 
-def get_index_input(index_len):
-    print("Enter indexes of string you want to save, delimitted by a space.'back' -> one back, 'finish' -> end.")
+def get_index_input(index_len, index):
+    print(str(index + 1) + ": Enter indexes of string you want to save, delimitted by a space.'back' -> one back, 'finish' -> end.")
     inp = input().lower()
     
     if inp == "back" or inp == "finish":
@@ -66,17 +66,17 @@ def get_index_input(index_len):
             if number != "-":
                 print("Please only provide an int number or a '-'.")
                 
-                return (get_index_input(index_len))
+                return (get_index_input(index_len, index))
         elif int(number) < 1:
             print("Please only provide int numbers > 1")
-            return (get_index_input(index_len))
+            return (get_index_input(index_len, index))
      
     numbers = [int(x) if x != "-" else x for x in numbers ]
     for number in numbers:
         if number != "-":
             if number > index_len:
                 print("Please provide only valid indexes")
-                return (get_index_input(index_len))
+                return (get_index_input(index_len, index))
     
     return numbers
 
@@ -112,11 +112,13 @@ def end_script(df: pd.DataFrame, index = None):
     exit()
 
 
-def iteration(index, row,df):
+def iteration(index, row,df, back = False):
     company_name = row[COMPANY_LABEL]
 
     splitted = split_str(company_name)
     if len(splitted) == 1:
+        if back:
+            return iteration(index -1, df.loc[index-1], df, back = True)
         df.loc[index, "company_short"] = splitted[0].upper()
         return
     lower, upper = list_to_display_String(splitted)
@@ -124,9 +126,9 @@ def iteration(index, row,df):
     print(upper)
     print(lower)
 
-    input_indexes = get_index_input(len(splitted))
+    input_indexes = get_index_input(len(splitted), index)
     if input_indexes == "back":
-        iteration(index -1, df.iloc[index-1], df)
+        iteration(index -1, df.loc[index-1], df, back = True)
         iteration(index, row, df)
     else:
         if input_indexes == "finish":
