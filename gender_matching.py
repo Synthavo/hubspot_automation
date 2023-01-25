@@ -50,7 +50,7 @@ def iteration(index, row,df):
         gender = get_gender_input(f_name, l_name)
         
         if gender == "back":
-            iteration(index -1, df.iloc[index-1], df)
+            iteration(index -1, df.loc[index-1], df)
             iteration(index, row, df)
         else:
             if gender== "finish":
